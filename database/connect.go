@@ -1,36 +1,38 @@
 package database
 
 import (
-	"database/sql"
-	"fmt"
+	"context"
+	"os"
+	"time"
+
+	"github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	_ "github.com/lib/pq"
 )
 
-const (
-	host     = "localhost"
-	port     = 5432
-	user     = "postgres"
-	password = "admin"
-	dbname   = "renochflytt"
-)
+func ConnectToMongoDB(log *logrus.Entry) (*mongo.Client, error) {
+	log.Infof("Connecting to MongoDB...")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-func Connect() *sql.DB {
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
-
-	db, err := sql.Open("postgres", psqlInfo)
+	uri := os.Getenv("MONGODB_URI")
+	clientOptions := options.Client().ApplyURI(uri)
+	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {
-		panic(err)
+		log.Errorf("MongoDB URI format incorrect: %v", err)
+		return nil, err
 	}
 
-	err = db.Ping()
+	// Test the connection by pinging the database
+	err = client.Ping(ctx, nil)
 	if err != nil {
-		panic(err)
+		log.Errorf("Could not ping MongoDB: %v", err)
+		return nil, err
 	}
 
-	fmt.Println("Successfully connected to postgresql")
+	log.Infof("Successfully connected to MongoDB")
+	return client, nil
 
-	return db
 }

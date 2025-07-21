@@ -3,45 +3,46 @@ package models
 import "time"
 
 type Booking struct {
-	Services       []string  `json:"services"`
-	MovingDate     Date `json:"moving_date"`
-	FlexibleDate   bool      `json:"flexible_date"`
-	CleaningDate   Date `json:"cleaning_date"`
-	CurrentAddress Address   `json:"current_address"`
-	NewAddress     Address   `json:"new_address"`
-	Contact        Contact   `json:"contact"`
+	Services       []string  `bson:"services" json:"services"`
+	MovingDate     Date      `bson:"moving_date" json:"moving_date"`
+	FlexibleDate   bool      `bson:"flexible_date" json:"flexible_date"`
+	CleaningDate   Date      `bson:"cleaning_date" json:"cleaning_date"`
+	CurrentAddress Address   `bson:"current_address" json:"current_address"`
+	NewAddress     Address   `bson:"new_address" json:"new_address"`
+	Contact        Contact   `bson:"contact" json:"contact"`
+	CreatedAt      time.Time `bson:"created_at" json:"-"`
 }
 
 type Address struct {
-	Adress        string `json:"address"`
-	ResidenceType string `json:"residence_type"`
-	LivingSpace   int    `json:"living_space"`
-	Accessibility string `json:"accessibility"`
-	Floor         int    `json:"floor"`
+	Address       string `bson:"address" json:"address"`
+	ResidenceType string `bson:"residence_type" json:"residence_type"`
+	LivingSpace   int    `bson:"living_space" json:"living_space"`
+	Accessibility string `bson:"accessibility" json:"accessibility"`
+	Floor         int    `bson:"floor" json:"floor"`
 }
 
 type Contact struct {
-	Name      string `json:"name"`
-	SSN       string `json:"ssn"`
-	Email     string `json:"email"`
-	Phone     string `json:"phone"`
-	Rutavdrag bool   `json:"rutavdrag"`
-	Message   string `json:"message"`
-	Policy    bool   `json:"terms_and_conditions"`
+	Name      string `bson:"name" json:"name"`
+	SSN       string `bson:"ssn" json:"ssn"`
+	Email     string `bson:"email" json:"email"`
+	Phone     string `bson:"phone" json:"phone"`
+	Rutavdrag bool   `bson:"rutavdrag" json:"rutavdrag"`
+	Message   string `bson:"message" json:"message"`
+	Policy    bool   `bson:"terms_and_conditions" json:"terms_and_conditions"`
 }
 
 type Date struct {
-	time.Time
+	time.Time `bson:"date" json:"date"`
 }
 
-func (cd *Date) UnmarshalJSON(b []byte) error {
-	// Remove quotes
+func (d *Date) UnmarshalJSON(b []byte) error {
 	s := string(b)
-	s = s[1 : len(s)-1]
+	s = s[1 : len(s)-1] // remove quotes
+
 	t, err := time.Parse("2006-01-02", s)
 	if err != nil {
 		return err
 	}
-	cd.Time = t
+	d.Time = t
 	return nil
 }

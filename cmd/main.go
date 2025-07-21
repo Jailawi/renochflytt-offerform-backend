@@ -4,26 +4,22 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"request-offer/database"
 	"request-offer/pkg/server"
+	"request-offer/pkg/services"
 	"syscall"
 
+	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 
 	"github.com/urfave/cli/v2"
 )
 
-type DBConfig struct {
-    User     string
-    Password string
-    Host     string
-    Port     int
-}
-
 func main() {
 	app := createApp()
 	if err := app.Run(os.Args); err != nil {
-        panic(err)
-    }
+		panic(err)
+	}
 }
 
 func createApp() *cli.App {
@@ -33,41 +29,41 @@ func createApp() *cli.App {
 	app.Usage = "A booking app for moving services"
 	app.Flags = []cli.Flag{
 		&cli.StringFlag{
-			Name:     "host",
-			Usage:    "Database host",
-			Value:    "localhost",
+			Name:  "host",
+			Usage: "Database host",
+			Value: "localhost",
 		},
 		&cli.Int64Flag{
-			Name:     "HTTPport",
-			Usage:    "http port",
-			Value:    8080,
+			Name:  "HTTPport",
+			Usage: "http port",
+			Value: 8080,
 		},
 		&cli.Int64Flag{
-			Name:     "DBport",
-			Usage:    "Database host",
-			Value:    5432,
+			Name:  "DBport",
+			Usage: "Database host",
+			Value: 5432,
 		},
 		&cli.StringFlag{
-			Name:     "user",
-			Usage:    "Database user",
-			EnvVars:  []string{"DB_USER"},
+			Name:    "user",
+			Usage:   "Database user",
+			EnvVars: []string{"DB_USER"},
 			Value:   "postgres",
 		},
 		&cli.StringFlag{
-			Name:     "db-name",
-			Usage:    "Database name",
-			EnvVars:  []string{"DB_NAME"},
+			Name:    "db-name",
+			Usage:   "Database name",
+			EnvVars: []string{"DB_NAME"},
 			Value:   "renochflytt",
 		},
 		&cli.StringFlag{
-			Name:     "db-password",
-			Usage:    "Database password",
+			Name:    "db-password",
+			Usage:   "Database password",
 			Value:   "admin",
-			EnvVars:  []string{"DB_PASSWORD"},
+			EnvVars: []string{"DB_PASSWORD"},
 		},
 	}
 
-	app.Action  = func(c *cli.Context) error {
+	app.Action = func(c *cli.Context) error {
 		log := logrus.WithFields(logrus.Fields{})
 		done := createTerminationHandler(log)
 		go start(c, log)
@@ -91,37 +87,23 @@ func createTerminationHandler(log *logrus.Entry) chan bool {
 }
 
 func start(c *cli.Context, log *logrus.Entry) {
-	fmt.Println("Starting server...")
+	log.Infof("Starting application...")
+	err := godotenv.Load("../.env")
+	if err != nil {
+		log.Warnf("Error loading .env file: %v", err)
+	}
 
-	server.Start(c, log)
-	// port := c.Int64("HTTPport")
-	// if err != nil {
-	// 	log.Errorf("Failed to start server: %v", err)
-	// }
-	// db := database.Connect()
+	// Initialize database connection
+	db, err := database.ConnectToMongoDB(log)
+	if err != nil {
+		log.Fatalf("Failed to connect to MongoDB: %v", err)
+	}
 
-	// defer db.Close()
+	emailService := services.NewEmailService(log)
 
-	
-	// uuid := "059984fc-860b-4a66-a1e2-768cded2aa1d"
-	// userType := "customer"
-	// ssn := "123456789"
-	// name := "John Doe"
-	// email := "john@mail.com"
-	// phone := "1234567890"
-	
+	bookingService := services.NewBookingService(db, emailService, log)
 
-	//res, err := db.Exec("INSERT INTO public.customers (id, type, ssn, name, email, phone) VALUES ($1, $2, $3, $4, $5, $6)", uuid,  userType, ssn, name, email, phone)
-	
-	// res, err := db.Exec("SELECT * FROM public.customers")
-	
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	// rowsAffected, err := res.RowsAffected()
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// fmt.Printf("Successfully connected! Rows affected: %d\n", rowsAffected)
+	// Start the server
+	server.Start(c, log, bookingService)
+	log.Infof("Application started successfully")
 }

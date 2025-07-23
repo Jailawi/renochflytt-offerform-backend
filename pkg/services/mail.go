@@ -1,9 +1,13 @@
 package services
 
 import (
+	"bytes"
 	"fmt"
+	"html/template"
 	"net/smtp"
 	"os"
+	"request-offer/pkg/models"
+	"request-offer/pkg/utils"
 	"strings"
 	"time"
 
@@ -105,25 +109,17 @@ func (s *EmailService) buildEmailMessage(emailMsg *EmailMessage) []byte {
 }
 
 // SendTestEmail sends a test email - convenience function for testing
-func (s *EmailService) SendTestEmail(to []string) error {
+func (s *EmailService) SendTestEmail(to []string, booking *models.Booking) error {
+	tmpl, _ := template.New("email").Parse(utils.BookingEmailTemplate)
+	var buf bytes.Buffer
+	tmpl.Execute(&buf, booking)
 	emailMsg := &EmailMessage{
 		To:      to,
 		Subject: "Important: Message from Ren & Flytt",
-		Body: `
-        <html>
-        <body>
-            <h1>Welcome to Ren & Flytt!</h1>
-            <p>This is an <strong>HTML</strong> email with:</p>
-            <ul>
-                <li>Bold text</li>
-                <li>Lists</li>
-                <li><a href="https://renochflytt.se">Links</a></li>
-            </ul>
-            <p style="color: blue;">Styled text</p>
-        </body>
-        </html>
-    `,
+		Body:    buf.String(),
 	}
 
 	return s.SendEmail(emailMsg)
 }
+
+

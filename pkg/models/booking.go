@@ -5,7 +5,7 @@ import "time"
 type Booking struct {
 	Services       []string  `bson:"services" json:"services"`
 	MovingDate     Date      `bson:"moving_date" json:"moving_date"`
-	FlexibleDate   bool      `bson:"flexible_date" json:"flexible_date"`
+	IsFlexibleDate bool      `bson:"is_flexible_date" json:"is_flexible_date"`
 	CleaningDate   *Date     `bson:"cleaning_date,omitempty" json:"cleaning_date,omitempty"`
 	CurrentAddress Address   `bson:"current_address" json:"current_address"`
 	NewAddress     Address   `bson:"new_address" json:"new_address"`

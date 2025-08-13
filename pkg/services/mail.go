@@ -2,16 +2,18 @@ package services
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"html/template"
 	"net/smtp"
 	"os"
 	"request-offer/pkg/models"
-	"request-offer/pkg/utils"
-	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 type EmailMessage struct {
@@ -22,8 +24,9 @@ type EmailMessage struct {
 
 // EmailService handles email operations
 type EmailService struct {
-	config *EmailConfig
-	logger *logrus.Entry
+	config      *EmailConfig
+	logger      *logrus.Entry
+	mongoClient *mongo.Client
 }
 
 type EmailConfig struct {
@@ -35,14 +38,15 @@ type EmailConfig struct {
 }
 
 // NewEmailService creates a new email service
-func NewEmailService(logger *logrus.Entry) *EmailService {
+func NewEmailService(mongoClient *mongo.Client, logger *logrus.Entry) *EmailService {
 	emailConfig, err := LoadEmailConfig()
 	if err != nil {
 		panic(fmt.Sprintf("Failed to load email configuration: %v", err))
 	}
 	return &EmailService{
-		config: emailConfig,
-		logger: logger,
+		config:      emailConfig,
+		logger:      logger,
+		mongoClient: mongoClient,
 	}
 }
 
@@ -66,7 +70,7 @@ func LoadEmailConfig() (*EmailConfig, error) {
 }
 
 // SendEmail sends an email using the EmailService
-func (s *EmailService) SendEmail(emailMsg *EmailMessage) error {
+func (s *EmailService) SendEmail(emailMsg *EmailMessage, bookingID primitive.ObjectID) error {
 	s.logger.Infof("Sending email from: %s to: %v", s.config.FromEmail, emailMsg.To)
 
 	// Build the complete email message
@@ -81,45 +85,87 @@ func (s *EmailService) SendEmail(emailMsg *EmailMessage) error {
 		return fmt.Errorf("failed to send email: %w", err)
 	}
 
+	s.mongoClient.Database("renochflytt").Collection("bookings").UpdateOne(
+		context.Background(),
+		bson.M{"_id": bookingID},
+		bson.M{"$set": bson.M{"email_sent": true}},
+	)
+
 	s.logger.Infof("Email sent successfully!")
 	return nil
 }
 
-// buildEmailMessage creates a properly formatted email message
+// buildEmailMessage creates a properly formatted HTML email message
+// buildEmailMessage creates a properly formatted HTML email message
 func (s *EmailService) buildEmailMessage(emailMsg *EmailMessage) []byte {
-	var builder strings.Builder
+	var buf bytes.Buffer
 
 	// Generate unique message ID and timestamp
 	messageID := fmt.Sprintf("<%d.%s@%s>", time.Now().UnixNano(), "gomail", "renochflytt.se")
 	date := time.Now().Format("Mon, 02 Jan 2006 15:04:05 -0700")
 
-	// Write headers consistently using fmt.Fprintf
-	fmt.Fprintf(&builder, "Message-ID: %s\r\n", messageID)
-	fmt.Fprintf(&builder, "Date: %s\r\n", date)
-	fmt.Fprintf(&builder, "From: \"%s\" <%s>\r\n", s.config.FromName, s.config.FromEmail)
-	fmt.Fprintf(&builder, "To: %s\r\n", emailMsg.To[0])
-	fmt.Fprintf(&builder, "Subject: %s\r\n", emailMsg.Subject)
-	fmt.Fprintf(&builder, "MIME-Version: 1.0\r\n")
-	fmt.Fprintf(&builder, "Content-Type: text/html; charset=UTF-8\r\n")
-	fmt.Fprintf(&builder, "X-Mailer: Ren-Flytt-System\r\n")
-	fmt.Fprintf(&builder, "\r\n") // Empty line separates headers from body
-	builder.WriteString(emailMsg.Body)
+	// Write headers for simple HTML email
+	fmt.Fprintf(&buf, "Message-ID: %s\r\n", messageID)
+	fmt.Fprintf(&buf, "Date: %s\r\n", date)
+	fmt.Fprintf(&buf, "From: \"%s\" <%s>\r\n", s.config.FromName, s.config.FromEmail)
+	fmt.Fprintf(&buf, "To: %s\r\n", emailMsg.To[0])
+	fmt.Fprintf(&buf, "Subject: %s\r\n", emailMsg.Subject)
+	fmt.Fprintf(&buf, "MIME-Version: 1.0\r\n")
+	fmt.Fprintf(&buf, "Content-Type: text/html; charset=UTF-8\r\n")
+	fmt.Fprintf(&buf, "Content-Transfer-Encoding: 8bit\r\n")
+	fmt.Fprintf(&buf, "X-Mailer: Ren-Flytt-System\r\n")
+	fmt.Fprintf(&buf, "\r\n")
 
-	return []byte(builder.String())
+	// Write HTML body
+	buf.WriteString(emailMsg.Body)
+
+	return buf.Bytes()
+}
+
+// SendBookingConfirmationEmail sends a booking confirmation email
+func (s *EmailService) SendBookingConfirmationEmail(to []string, booking *models.Booking, bookingID primitive.ObjectID) error {
+	// Load template from file
+	templatePath := "templates/customer-booking.html"
+	tmpl, err := template.ParseFiles(templatePath)
+	if err != nil {
+		return fmt.Errorf("failed to load email template: %w", err)
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, booking)
+	if err != nil {
+		return fmt.Errorf("failed to execute email template: %w", err)
+	}
+
+	emailMsg := &EmailMessage{
+		To:      to,
+		Subject: "Bokningsbekräftelse - Ren & Flytt",
+		Body:    buf.String(),
+	}
+
+	return s.SendEmail(emailMsg, bookingID)
 }
 
 // SendTestEmail sends a test email - convenience function for testing
 func (s *EmailService) SendTestEmail(to []string, booking *models.Booking) error {
-	tmpl, _ := template.New("email").Parse(utils.BookingEmailTemplate)
+	// Load template from file
+	templatePath := "../templates/customer-booking.html"
+	tmpl, err := template.ParseFiles(templatePath)
+	if err != nil {
+		return fmt.Errorf("failed to load email template: %w", err)
+	}
+
 	var buf bytes.Buffer
-	tmpl.Execute(&buf, booking)
+	err = tmpl.Execute(&buf, booking)
+	if err != nil {
+		return fmt.Errorf("failed to execute email template: %w", err)
+	}
+
 	emailMsg := &EmailMessage{
 		To:      to,
-		Subject: "Important: Message from Ren & Flytt",
+		Subject: "Bokningsbekräftelse - Ren & Flytt",
 		Body:    buf.String(),
 	}
 
-	return s.SendEmail(emailMsg)
+	return s.SendEmail(emailMsg, booking.ID)
 }
-
-

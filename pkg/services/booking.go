@@ -10,8 +10,9 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-) 
+)
 
 // EmailSender interface for sending emails
 type EmailSender interface {
@@ -50,7 +51,9 @@ func (s *BookingService) CreateBooking(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Set the created_at field to current time
+	booking.ID = primitive.NewObjectID() // Generate a new ObjectID
 	booking.CreatedAt = time.Now()
+	booking.EmailSent = false // Default to false, will be set to true after email is sent
 
 	result, err := s.mongoClient.Database("renochflytt").Collection("bookings").InsertOne(r.Context(), booking)
 	if err != nil {
@@ -61,6 +64,7 @@ func (s *BookingService) CreateBooking(w http.ResponseWriter, r *http.Request) {
 
 	s.logger.Infof("Booking inserted successfully with ID: %v", result.InsertedID)
 	s.logger.Infof("Received booking request: %+v", booking)
-	// go s.emailSender.SendTestEmail([]string{"mustafa.al-jailawi@mail.com", "mustafa.aljailawi@gmail.com"}, &booking) // Send email notification
+	
+	go s.emailSender.SendTestEmail([]string{"mustafa.al-jailawi@mail.com", "mustafa.aljailawi@gmail.com"}, &booking) // Send email notification
 	w.WriteHeader(http.StatusCreated)
 }

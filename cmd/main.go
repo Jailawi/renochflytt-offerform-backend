@@ -99,7 +99,7 @@ func start(c *cli.Context, log *logrus.Entry) {
 		log.Fatalf("Failed to connect to MongoDB: %v", err)
 	}
 
-	emailService := services.NewEmailService(log)
+	emailService := services.NewEmailService(db, log)
 
 	bookingService := services.NewBookingService(db, emailService, log)
 

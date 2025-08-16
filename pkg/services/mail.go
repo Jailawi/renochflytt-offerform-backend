@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"html/template"
 	"net/smtp"
-	"os"
 	"request-offer/pkg/models"
 	"time"
 
@@ -24,64 +23,34 @@ type EmailMessage struct {
 
 // EmailService handles email operations
 type EmailService struct {
-	config      *EmailConfig
-	logger      *logrus.Entry
+	envs       *models.Envs
+	logger     *logrus.Entry
 	mongoClient *mongo.Client
 }
 
-type EmailConfig struct {
-	SMTPHost     string
-	SMTPPort     string
-	SMTPPassword string
-	FromEmail    string
-	FromName     string
-}
-
 // NewEmailService creates a new email service
-func NewEmailService(mongoClient *mongo.Client, logger *logrus.Entry) *EmailService {
-	emailConfig, err := LoadEmailConfig()
-	if err != nil {
-		panic(fmt.Sprintf("Failed to load email configuration: %v", err))
-	}
+func NewEmailService(mongoClient *mongo.Client, envs *models.Envs, logger *logrus.Entry) *EmailService {
 	return &EmailService{
-		config:      emailConfig,
-		logger:      logger,
+		envs:       envs,
+		logger:     logger,
 		mongoClient: mongoClient,
 	}
 }
 
-// LoadEmailConfig loads email configuration from environment variables
-func LoadEmailConfig() (*EmailConfig, error) {
-
-	config := &EmailConfig{
-		SMTPHost:     os.Getenv("SMTP_HOST"),
-		SMTPPort:     os.Getenv("SMTP_PORT"),
-		SMTPPassword: os.Getenv("SMTP_PASSWORD"),
-		FromEmail:    os.Getenv("FROM_EMAIL"),
-		FromName:     os.Getenv("FROM_NAME"),
-	}
-
-	// Validate required fields
-	if config.SMTPHost == "" || config.SMTPPassword == "" || config.FromEmail == "" {
-		return nil, fmt.Errorf("missing required email configuration")
-	}
-
-	return config, nil
-}
 
 // SendEmail sends an email using the EmailService
 func (s *EmailService) SendEmail(emailMsg *EmailMessage, bookingID primitive.ObjectID) error {
-	s.logger.Infof("Sending email from: %s to: %v", s.config.FromEmail, emailMsg.To)
+	s.logger.Infof("Sending email from: %s to: %v", s.envs.FromEmail, emailMsg.To)
 
 	// Build the complete email message
 	msg := s.buildEmailMessage(emailMsg)
 
 	// Setup authentication
-	auth := smtp.PlainAuth("", s.config.FromEmail, s.config.SMTPPassword, s.config.SMTPHost)
+	auth := smtp.PlainAuth("", s.envs.FromEmail, s.envs.SMTPPass, s.envs.SMTPHost)
 
 	// Send email via SMTP
-	serverAddr := fmt.Sprintf("%s:%s", s.config.SMTPHost, s.config.SMTPPort)
-	if err := smtp.SendMail(serverAddr, auth, s.config.FromEmail, emailMsg.To, msg); err != nil {
+	serverAddr := fmt.Sprintf("%s:%s", s.envs.SMTPHost, s.envs.SMTPPort)
+	if err := smtp.SendMail(serverAddr, auth, s.envs.FromEmail, emailMsg.To, msg); err != nil {
 		return fmt.Errorf("failed to send email: %w", err)
 	}
 
@@ -107,7 +76,7 @@ func (s *EmailService) buildEmailMessage(emailMsg *EmailMessage) []byte {
 	// Write headers for simple HTML email
 	fmt.Fprintf(&buf, "Message-ID: %s\r\n", messageID)
 	fmt.Fprintf(&buf, "Date: %s\r\n", date)
-	fmt.Fprintf(&buf, "From: \"%s\" <%s>\r\n", s.config.FromName, s.config.FromEmail)
+	fmt.Fprintf(&buf, "From: \"%s\" <%s>\r\n", s.envs.FromName, s.envs.FromEmail)
 	fmt.Fprintf(&buf, "To: %s\r\n", emailMsg.To[0])
 	fmt.Fprintf(&buf, "Subject: %s\r\n", emailMsg.Subject)
 	fmt.Fprintf(&buf, "MIME-Version: 1.0\r\n")

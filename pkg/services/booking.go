@@ -65,6 +65,6 @@ func (s *BookingService) CreateBooking(w http.ResponseWriter, r *http.Request) {
 	s.logger.Infof("Booking inserted successfully with ID: %v", result.InsertedID)
 	s.logger.Infof("Received booking request: %+v", booking)
 	
-	go s.emailSender.SendTestEmail([]string{"mustafa.al-jailawi@mail.com", "mustafa.aljailawi@gmail.com"}, &booking) // Send email notification
+	go s.emailSender.SendTestEmail([]string{booking.Contact.Email}, &booking) // Send email notification
 	w.WriteHeader(http.StatusCreated)
 }

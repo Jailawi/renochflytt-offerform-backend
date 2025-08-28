@@ -119,6 +119,8 @@ func (s *EmailService) SendBookingConfirmationEmail(to []string, booking *models
 func (s *EmailService) SendTestEmail(to []string, booking *models.Booking) error {
 	// Load template from file
 	templatePath := "../templates/customer-booking.html"
+	companyEmail := s.envs.FromEmail
+	receivers := append(to, companyEmail)
 	tmpl, err := template.ParseFiles(templatePath)
 	if err != nil {
 		return fmt.Errorf("failed to load email template: %w", err)
@@ -131,7 +133,7 @@ func (s *EmailService) SendTestEmail(to []string, booking *models.Booking) error
 	}
 
 	emailMsg := &EmailMessage{
-		To:      to,
+		To:      receivers,
 		Subject: "Bokningsbekräftelse - Ren & Flytt",
 		Body:    buf.String(),
 	}

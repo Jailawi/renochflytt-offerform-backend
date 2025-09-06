@@ -7,4 +7,5 @@ type Envs struct {
 	SMTPHost  string
 	SMTPPort  string
 	SMTPPass  string
+	APIKey    string
 }

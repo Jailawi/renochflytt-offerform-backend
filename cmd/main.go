@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"request-offer/database"
+	"request-offer/pkg/middleware"
 	"request-offer/pkg/models"
 	"request-offer/pkg/server"
 	"request-offer/pkg/services"
@@ -23,6 +24,7 @@ const (
 	SMTPHost  = "smtp-host"
 	SMTPPort  = "smtp-port"
 	SMTPPass  = "smtp-pass"
+	APIKey    = "api-key"
 )
 
 func main() {
@@ -75,6 +77,11 @@ func createApp() *cli.App {
 			Usage:   "SMTP password",
 			EnvVars: []string{"SMTP_PASS"},
 		},
+		&cli.StringFlag{
+			Name:    APIKey,
+			Usage:   "API key",
+			EnvVars: []string{"X-API-KEY"},
+		},
 	}
 
 	app.Action = func(c *cli.Context) error {
@@ -110,6 +117,7 @@ func start(c *cli.Context, log *logrus.Entry) {
 		SMTPHost:  c.String(SMTPHost),
 		SMTPPort:  c.String(SMTPPort),
 		SMTPPass:  c.String(SMTPPass),
+		APIKey:    c.String(APIKey),
 	}
 
 	// Initialize database connection
@@ -122,7 +130,10 @@ func start(c *cli.Context, log *logrus.Entry) {
 
 	bookingService := services.NewBookingService(db, emailService, log)
 
+	// Start cleanup of inactive limiters
+	middleware.CleanupInactiveLimiters()
+
 	// Start the server
-	server.Start(c, log, bookingService)
+	server.Start(c, log, envs, bookingService)
 	log.Infof("Application started successfully")
 }

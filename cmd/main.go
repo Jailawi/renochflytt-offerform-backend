@@ -17,14 +17,13 @@ import (
 )
 
 const (
-	HTTPPort  = "http-port"
-	MongoUri  = "mongo-uri"
-	FromEmail = "from-email"
-	FromName  = "from-name"
-	SMTPHost  = "smtp-host"
-	SMTPPort  = "smtp-port"
-	SMTPPass  = "smtp-pass"
-	APIKey    = "api-key"
+	HTTPPort      = "http-port"
+	Origins       = "origins"
+	MongoUri      = "mongo-uri"
+	FromEmail     = "from-email"
+	FromName      = "from-name"
+	APIKey        = "api-key"
+	MailgunAPIKey = "mailgun-api-key"
 )
 
 func main() {
@@ -41,9 +40,16 @@ func createApp() *cli.App {
 	app.Usage = "A booking app for moving services"
 	app.Flags = []cli.Flag{
 		&cli.Int64Flag{
-			Name:  HTTPPort,
-			Usage: "HTTP port",
-			Value: 8080,
+			Name:    HTTPPort,
+			Usage:   "HTTP port",
+			Value:   8080,
+			EnvVars: []string{"PORT"},
+		},
+		&cli.StringFlag{
+			Name:    Origins,
+			Usage:   "Allowed origins",
+			Value:   "*",
+			EnvVars: []string{"ORIGINS"},
 		},
 		&cli.StringFlag{
 			Name:    MongoUri,
@@ -63,24 +69,14 @@ func createApp() *cli.App {
 			EnvVars: []string{"FROM_NAME"},
 		},
 		&cli.StringFlag{
-			Name:    SMTPHost,
-			Usage:   "SMTP host",
-			EnvVars: []string{"SMTP_HOST"},
-		},
-		&cli.StringFlag{
-			Name:    SMTPPort,
-			Usage:   "SMTP port",
-			EnvVars: []string{"SMTP_PORT"},
-		},
-		&cli.StringFlag{
-			Name:    SMTPPass,
-			Usage:   "SMTP password",
-			EnvVars: []string{"SMTP_PASS"},
-		},
-		&cli.StringFlag{
 			Name:    APIKey,
 			Usage:   "API key",
 			EnvVars: []string{"X-API-KEY"},
+		},
+		&cli.StringFlag{
+			Name:    MailgunAPIKey,
+			Usage:   "Mailgun API key",
+			EnvVars: []string{"MAILGUN_API_KEY"},
 		},
 	}
 
@@ -111,13 +107,12 @@ func start(c *cli.Context, log *logrus.Entry) {
 	log.Infof("Starting application...")
 
 	envs := &models.Envs{
-		MongoUri:  c.String(MongoUri),
-		FromEmail: c.String(FromEmail),
-		FromName:  c.String(FromName),
-		SMTPHost:  c.String(SMTPHost),
-		SMTPPort:  c.String(SMTPPort),
-		SMTPPass:  c.String(SMTPPass),
-		APIKey:    c.String(APIKey),
+		Origins :      c.String(Origins),
+		MongoUri:      c.String(MongoUri),
+		FromEmail:     c.String(FromEmail),
+		FromName:      c.String(FromName),
+		APIKey:        c.String(APIKey),
+		MailgunAPIKey: c.String(MailgunAPIKey),
 	}
 
 	// Initialize database connection

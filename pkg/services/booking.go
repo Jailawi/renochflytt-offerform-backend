@@ -99,7 +99,9 @@ const ORIGIN = "Helsingborg C"
 const RADIUS = 6 // km
 const PRICE_PER_KM_UNDER_THRESHOLD = 20
 const PRICE_PER_KM_OVER_THRESHOLD = 8
+const PRICE_PER_KM_OVER_MAX_THRESHOLD = 23
 const PRICE_THRESHOLD_KM = 60 // km
+const PRICE_THRESHOLD_KM_MAX = 1000 // km
 const URL = "https://routes.googleapis.com/directions/v2:computeRoutes"
 
 func (s *BookingService) EstimateBooking(w http.ResponseWriter, r *http.Request) {
@@ -118,7 +120,7 @@ func (s *BookingService) EstimateBooking(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "Failed to parse request body", http.StatusBadRequest)
 		return
 	}
-	distance, err := s.calculateDistance(booking.CurrentAddress.Address, booking.NewAddress.Address)
+	distance, err := s.calculateFullRouteDistance(booking.CurrentAddress.Address, booking.NewAddress.Address)
 	if err != nil {
 		s.logger.Errorf("Error calculating distance: %v", err)
 		http.Error(w, "Failed to calculate distance: "+err.Error(), http.StatusInternalServerError)
@@ -140,11 +142,20 @@ func (s *BookingService) EstimateBooking(w http.ResponseWriter, r *http.Request)
 			estimatedPrice += distanceCost + movingCost + accessCost
 			s.logger.Infof("Subtotal 1: %d SEK", estimatedPrice)
 		case "Flyttstädning":
-			cleaningCost := s.calculateCleaningCost(*booking.CurrentAddress.LivingArea)
-			cleaningDistanceCost := int(float64(s.calculateDistanceCost(distance)) * 0.5)
-			s.logger.Infof("Calculated cleaning cost: %d SEK for living area: %d kvm and distance cost: %d SEK", cleaningCost, *booking.CurrentAddress.LivingArea, cleaningDistanceCost)
-			estimatedPrice += cleaningCost + cleaningDistanceCost
-			s.logger.Infof("Subtotal 2: %d SEK", estimatedPrice)
+			distance, err := s.calculateDistance(booking.CurrentAddress.Address)
+			if err != nil {
+				s.logger.Errorf("Error calculating distance for cleaning: %v", err)
+				continue
+			}
+			if distance <= 120 {
+				cleaningCost := s.calculateCleaningCost(*booking.CurrentAddress.LivingArea)
+				cleaningDistanceCost := int(float64(s.calculateDistanceCost(distance)) * 0.5)
+				s.logger.Infof("Calculated cleaning cost: %d SEK for living area: %d kvm and distance cost: %d SEK", cleaningCost, *booking.CurrentAddress.LivingArea, cleaningDistanceCost)
+				estimatedPrice += cleaningCost + cleaningDistanceCost
+				s.logger.Infof("Subtotal 2: %d SEK", estimatedPrice)
+				continue
+			}
+			s.logger.Infof("Skipping cleaning cost calculation, distance %d km exceeds limit", distance)
 		case "Packning":
 			estimatedPrice += 1200 // Fixed price for packning
 		case "Montering":
@@ -161,13 +172,76 @@ func (s *BookingService) EstimateBooking(w http.ResponseWriter, r *http.Request)
 	}
 }
 
-func (s *BookingService) calculateDistance(currentAddress, newAddress string) (int, error) {
+func (s *BookingService) calculateFullRouteDistance(currentAddress, newAddress string) (int, error) {
 	// Placeholder implementation - replace with actual distance calculation logic
 	// Define the request body
 	reqBody := RouteRequest{
 		Origin:        Address{Address: ORIGIN},
 		Intermediates: []Address{{Address: currentAddress}, {Address: newAddress}},
 		Destination:   Address{Address: ORIGIN},
+		TravelMode:    "DRIVE",
+	}
+
+	// Marshal the request body to JSON
+	bodyBytes, err := json.Marshal(reqBody)
+	if err != nil {
+		fmt.Printf("Error marshalling request body: %v\n", err)
+		return 0, err
+	}
+
+	// Create a new HTTP POST request
+	req, err := http.NewRequestWithContext(context.Background(), "POST", URL, bytes.NewReader(bodyBytes))
+	if err != nil {
+		fmt.Printf("Error creating request: %v\n", err)
+		return 0, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Goog-Api-Key", s.envs.MapsAPIKey)
+	req.Header.Set("X-Goog-FieldMask", "routes.duration,routes.distanceMeters")
+
+	// Send the request
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("Error sending request: %v\n", err)
+		return 0, err
+	}
+	defer resp.Body.Close()
+
+	// Read and parse the response
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Printf("Error reading response body: %v\n", err)
+		return 0, err
+	}
+
+	// Check if the response status is OK
+	if resp.StatusCode != http.StatusOK {
+		fmt.Printf("API request failed with status %d: %s\n", resp.StatusCode, string(data))
+		return 0, fmt.Errorf("API request failed with status %d", resp.StatusCode)
+	}
+
+	// Define the structure for the response
+	var response RouteResponse
+
+	// Unmarshal the response body into the response structure
+	if err := json.Unmarshal(data, &response); err != nil {
+		fmt.Printf("Error unmarshalling response: %v\n", err)
+		return 0, err
+	}
+
+	distanceMeters := response.Routes[0].DistanceMeters
+	distanceKm := int(math.Round(float64(distanceMeters) / 1000))
+
+	return distanceKm, nil
+}
+
+func (s *BookingService) calculateDistance(currentAddress string) (int, error) {
+	// Placeholder implementation - replace with actual distance calculation logic
+	// Define the request body
+	reqBody := RouteRequest{
+		Origin:        Address{Address: ORIGIN},
+		Destination:   Address{Address: currentAddress},
 		TravelMode:    "DRIVE",
 	}
 
@@ -234,7 +308,11 @@ func (s *BookingService) calculateDistanceCost(distanceKm int) int {
 		return distanceKm * PRICE_PER_KM_UNDER_THRESHOLD
 	}
 
-	return ((distanceKm - PRICE_THRESHOLD_KM) * PRICE_PER_KM_OVER_THRESHOLD) + (PRICE_THRESHOLD_KM * PRICE_PER_KM_UNDER_THRESHOLD)
+	if distanceKm <= PRICE_THRESHOLD_KM_MAX {
+		return ((distanceKm - PRICE_THRESHOLD_KM) * PRICE_PER_KM_OVER_THRESHOLD) + (PRICE_THRESHOLD_KM * PRICE_PER_KM_UNDER_THRESHOLD)
+	}
+
+	return ((distanceKm - PRICE_THRESHOLD_KM - PRICE_THRESHOLD_KM_MAX) * PRICE_PER_KM_OVER_THRESHOLD) + (PRICE_THRESHOLD_KM * PRICE_PER_KM_UNDER_THRESHOLD) + (PRICE_PER_KM_OVER_MAX_THRESHOLD*PRICE_THRESHOLD_KM_MAX)
 }
 
 func (s *BookingService) calculateMovingResidenceCost(livingArea int) int {

@@ -21,7 +21,7 @@ func NewHandler(bookingService *services.BookingService, logger *logrus.Entry) *
 
 func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("/", h.homeHandler)
-	// mux.HandleFunc("/offer-estimate", h.calc.EstimateHandler)
+	mux.HandleFunc("POST /offer-estimate", h.estimateHandler)
 	mux.HandleFunc("/booking", h.bookingHandler)
 }
 
@@ -32,4 +32,8 @@ func (h *Handler) homeHandler(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) bookingHandler(w http.ResponseWriter, r *http.Request) {
 	h.bookingService.CreateBooking(w, r)
+}
+
+func (h *Handler) estimateHandler(w http.ResponseWriter, r *http.Request) {
+	h.bookingService.EstimateBooking(w, r)
 }

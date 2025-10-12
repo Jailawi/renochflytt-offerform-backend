@@ -23,6 +23,7 @@ const (
 	FromEmail     = "from-email"
 	FromName      = "from-name"
 	APIKey        = "api-key"
+	MapsAPIKey    = "maps-api-key"
 	MailgunAPIKey = "mailgun-api-key"
 )
 
@@ -74,6 +75,11 @@ func createApp() *cli.App {
 			EnvVars: []string{"X-API-KEY"},
 		},
 		&cli.StringFlag{
+			Name:    MapsAPIKey,
+			Usage:   "Maps API key",
+			EnvVars: []string{"MAPS_API_KEY"},
+		},
+		&cli.StringFlag{
 			Name:    MailgunAPIKey,
 			Usage:   "Mailgun API key",
 			EnvVars: []string{"MAILGUN_API_KEY"},
@@ -112,6 +118,7 @@ func start(c *cli.Context, log *logrus.Entry) {
 		FromEmail:     c.String(FromEmail),
 		FromName:      c.String(FromName),
 		APIKey:        c.String(APIKey),
+		MapsAPIKey:    c.String(MapsAPIKey),
 		MailgunAPIKey: c.String(MailgunAPIKey),
 	}
 
@@ -123,7 +130,7 @@ func start(c *cli.Context, log *logrus.Entry) {
 
 	emailService := services.NewEmailService(db, envs, log)
 
-	bookingService := services.NewBookingService(db, emailService, log)
+	bookingService := services.NewBookingService(db, emailService, log, envs)
 
 	// Start cleanup of inactive limiters
 	middleware.CleanupInactiveLimiters()

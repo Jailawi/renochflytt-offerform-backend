@@ -63,7 +63,7 @@ func (s *EmailService) SendEmail(emailMsg *EmailMessage, bookingID primitive.Obj
 func (s *EmailService) SendTestEmail(to []string, booking *models.Booking) error {
 	s.logger.Infof("Loading email template and sending test email to: %v", to)
 	// Load template from file
-	templatePath := "../templates/customer-booking.html"
+	templatePath := "templates/customer-booking.html"
 	companyEmail := s.envs.FromEmail
 	receivers := append(to, companyEmail)
 	tmpl, err := template.ParseFiles(templatePath)

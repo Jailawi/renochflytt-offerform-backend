@@ -11,7 +11,7 @@ import (
 // Limit settings
 const (
 	reqsPerMinute = 5                // allow 5 requests per minute per IP
-	burstSize     = 2                // short bursts allowed
+	burstSize     = 3                // short bursts allowed
 	cleanupAfter  = 10 * time.Minute // cleanup inactive IPs
 )
 

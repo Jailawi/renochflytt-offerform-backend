@@ -6,5 +6,6 @@ type Envs struct {
 	FromEmail     string
 	FromName      string
 	APIKey        string
+	MapsAPIKey    string
 	MailgunAPIKey string
 }

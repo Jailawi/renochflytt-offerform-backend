@@ -21,7 +21,6 @@ type Booking struct {
 
 type Residence struct {
 	Address       string `bson:"address" json:"address"`
-	PlaceId       string `bson:"place_id" json:"place_id"`
 	ResidenceType string `bson:"residence_type" json:"residence_type"`
 	LivingArea    *int   `bson:"living_area,omitempty" json:"living_area,omitempty"`
 	Accessibility string `bson:"accessibility" json:"accessibility"`

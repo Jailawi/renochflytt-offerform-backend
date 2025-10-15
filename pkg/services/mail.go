@@ -74,6 +74,7 @@ func (s *EmailService) SendTestEmail(to []string, booking *models.Booking) error
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, booking)
 	if err != nil {
+		s.logger.Errorf("Error executing template: %v", err)
 		return fmt.Errorf("failed to execute email template: %w", err)
 	}
 

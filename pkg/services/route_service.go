@@ -13,6 +13,11 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const (
+	ORIGIN = "Helsingborg C"
+    URL    = "https://routes.googleapis.com/directions/v2:computeRoutes"
+)
+
 type RouteDistances struct {
 	ToCurrentAddress int // Distance from origin to current address in km
 	Total            int // Total distance from origin --> current address --> new address --> origin in km

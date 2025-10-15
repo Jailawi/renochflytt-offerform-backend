@@ -74,16 +74,6 @@ func (s *BookingService) CreateBooking(w http.ResponseWriter, r *http.Request) {
 
 // Define the structure for the request body
 
-const ORIGIN = "Helsingborg C"
-const PRICE_PACKNING = 1200                // SEK
-const PRICE_MONTERING = 300                // SEK
-const PRICE_PER_KM_OVER_THRESHOLD = 8      // SEK
-const PRICE_PER_KM_UNDER_THRESHOLD = 20    // SEK
-const PRICE_PER_KM_OVER_MAX_THRESHOLD = 23 // SEK
-const RADIUS = 6                           // km
-const DISTANCE_THRESHOLD = 60              // km
-const DISTANCE_THRESHOLD_MAX = 1000        // km
-const URL = "https://routes.googleapis.com/directions/v2:computeRoutes"
 
 func (s *BookingService) EstimateBooking(w http.ResponseWriter, r *http.Request) {
 

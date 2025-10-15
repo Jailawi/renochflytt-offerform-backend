@@ -7,6 +7,17 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+const (
+	PRICE_PACKNING                  = 1200 // SEK
+	PRICE_MONTERING                 = 300  // SEK
+	PRICE_PER_KM_OVER_THRESHOLD     = 8    // SEK
+	PRICE_PER_KM_UNDER_THRESHOLD    = 20   // SEK
+	PRICE_PER_KM_OVER_MAX_THRESHOLD = 23   // SEK
+	RADIUS                          = 6    // km
+	DISTANCE_THRESHOLD              = 60   // km
+	DISTANCE_THRESHOLD_MAX          = 1000 // km
+)
+
 type PriceCalculator struct {
 	logger *logrus.Entry
 }

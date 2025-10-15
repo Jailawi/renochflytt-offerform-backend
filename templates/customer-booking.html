@@ -166,12 +166,12 @@
                                                 <td style="padding: 24px;" class="mobile-padding">
                                                     <h3 style="margin: 0 0 20px 0; color: #E94A00; font-size: 18px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Från</h3>
                                                     <div style="margin-bottom: 16px;">
-                                                        <div style="color: #333; font-size: 16px; font-weight: 600; margin-bottom: 8px;">{{.CurrentAddress.Address}}</div>
+                                                        <div style="color: #333; font-size: 16px; font-weight: 600; margin-bottom: 8px;">{{.CurrentResidence.Address}}</div>
                                                         <div style="color: #666; font-size: 14px; line-height: 1.6;">
-                                                            <div>{{.CurrentAddress.ResidenceType}}</div>
-                                                            <div>{{.CurrentAddress.LivingArea}} m²</div>
-                                                            {{if .CurrentAddress.Floor}}<div>Våning {{.CurrentAddress.Floor}}</div>{{end}}
-                                                            <div>{{.CurrentAddress.Accessibility}}</div>
+                                                            <div>{{.CurrentResidence.ResidenceType}}</div>
+                                                            <div>{{.CurrentResidence.LivingArea}} m²</div>
+                                                            {{if .CurrentResidence.Floor}}<div>Våning {{.CurrentResidence.Floor}}</div>{{end}}
+                                                            <div>{{.CurrentResidence.Accessibility}}</div>
                                                         </div>
                                                     </div>
                                                 </td>
@@ -186,12 +186,12 @@
                                                 <td style="padding: 24px;" class="mobile-padding">
                                                     <h3 style="margin: 0 0 20px 0; color: #E94A00; font-size: 18px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Till</h3>
                                                     <div style="margin-bottom: 16px;">
-                                                        <div style="color: #333; font-size: 16px; font-weight: 600; margin-bottom: 8px;">{{.NewAddress.Address}}</div>
+                                                        <div style="color: #333; font-size: 16px; font-weight: 600; margin-bottom: 8px;">{{.NewResidence.Address}}</div>
                                                         <div style="color: #666; font-size: 14px; line-height: 1.6;">
-                                                            <div>{{.NewAddress.ResidenceType}}</div>
-                                                            {{if .NewAddress.LivingArea}}<div>{{.NewAddress.LivingArea}} m²</div>{{end}}
-                                                            {{if .NewAddress.Floor}}<div>Våning {{.NewAddress.Floor}}</div>{{end}}
-                                                            <div>{{.NewAddress.Accessibility}}</div>
+                                                            <div>{{.NewResidence.ResidenceType}}</div>
+                                                            {{if .NewResidence.LivingArea}}<div>{{.NewResidence.LivingArea}} m²</div>{{end}}
+                                                            {{if .NewResidence.Floor}}<div>Våning {{.NewResidence.Floor}}</div>{{end}}
+                                                            <div>{{.NewResidence.Accessibility}}</div>
                                                         </div>
                                                     </div>
                                                 </td>

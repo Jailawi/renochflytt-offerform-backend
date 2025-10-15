@@ -7,19 +7,19 @@ import (
 )
 
 type Booking struct {
-	ID             primitive.ObjectID `bson:"_id," json:"id"`
-	Services       []string           `bson:"services" json:"services"`
-	MovingDate     Date               `bson:"moving_date" json:"moving_date"`
-	IsFlexibleDate bool               `bson:"is_flexible_date" json:"is_flexible_date"`
-	CleaningDate   *Date              `bson:"cleaning_date,omitempty" json:"cleaning_date,omitempty"`
-	CurrentAddress Address            `bson:"current_address" json:"current_address"`
-	NewAddress     Address            `bson:"new_address" json:"new_address"`
-	Contact        Contact            `bson:"contact" json:"contact"`
-	EmailSent      bool               `bson:"email_sent" json:"email_sent"`
-	CreatedAt      time.Time          `bson:"created_at" json:"-"`
+	ID               primitive.ObjectID `bson:"_id," json:"id"`
+	Services         []string           `bson:"services" json:"services"`
+	MovingDate       Date               `bson:"moving_date" json:"moving_date"`
+	IsFlexibleDate   bool               `bson:"is_flexible_date" json:"is_flexible_date"`
+	CleaningDate     *Date              `bson:"cleaning_date,omitempty" json:"cleaning_date,omitempty"`
+	CurrentResidence Residence          `bson:"current_address" json:"current_address"`
+	NewResidence     Residence          `bson:"new_address" json:"new_address"`
+	Contact          Contact            `bson:"contact" json:"contact"`
+	EmailSent        bool               `bson:"email_sent" json:"email_sent"`
+	CreatedAt        time.Time          `bson:"created_at" json:"-"`
 }
 
-type Address struct {
+type Residence struct {
 	Address       string `bson:"address" json:"address"`
 	PlaceId       string `bson:"place_id" json:"place_id"`
 	ResidenceType string `bson:"residence_type" json:"residence_type"`

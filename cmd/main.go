@@ -113,7 +113,7 @@ func start(c *cli.Context, log *logrus.Entry) {
 	log.Infof("Starting application...")
 
 	envs := &models.Envs{
-		Origins :      c.String(Origins),
+		Origins:       c.String(Origins),
 		MongoUri:      c.String(MongoUri),
 		FromEmail:     c.String(FromEmail),
 		FromName:      c.String(FromName),
@@ -129,8 +129,9 @@ func start(c *cli.Context, log *logrus.Entry) {
 	}
 
 	emailService := services.NewEmailService(db, envs, log)
-
-	bookingService := services.NewBookingService(db, emailService, log, envs)
+	routeService := services.NewDistanceService(envs, log)
+	priceCalculator := services.NewPriceCalculator(log)
+	bookingService := services.NewBookingService(db, emailService, routeService, priceCalculator,log, envs)
 
 	// Start cleanup of inactive limiters
 	middleware.CleanupInactiveLimiters()

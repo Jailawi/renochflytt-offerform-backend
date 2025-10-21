@@ -45,9 +45,12 @@ func (pc *PriceCalculator) CalculatePrice(booking *models.Booking, route *models
 		case "Flytthjälp":
 			movingCost := pc.calculateMovingResidenceCost(*booking.CurrentResidence.LivingArea)
 			pc.logger.Infof("Add moving cost: %d SEK for living area: %d kvm", movingCost, *booking.CurrentResidence.LivingArea)
-			accessCost := pc.calculateAccessCost(booking.CurrentResidence.Accessibility, *booking.CurrentResidence.Floor)
-			pc.logger.Infof("Add cost: %d SEK for accessibility: %s, floor: %d", accessCost, booking.CurrentResidence.Accessibility, *booking.CurrentResidence.Floor)
-			estimatedPrice += distanceCost + movingCost + accessCost
+			estimatedPrice += distanceCost + movingCost
+			if (booking.CurrentResidence.ResidenceType == "Lägenhet") {
+				accessCost := pc.calculateAccessCost(booking.CurrentResidence.Accessibility, *booking.CurrentResidence.Floor)
+				pc.logger.Infof("Add cost: %d SEK for accessibility: %s, floor: %d", accessCost, booking.CurrentResidence.Accessibility, *booking.CurrentResidence.Floor)
+				estimatedPrice += accessCost
+			}
 			pc.logger.Infof("subtotal: %d SEK", estimatedPrice)
 		case "Flyttstädning":
 			if route.ToCurrentAddress <= 120 {
@@ -56,8 +59,8 @@ func (pc *PriceCalculator) CalculatePrice(booking *models.Booking, route *models
 				pc.logger.Infof("Add cleaning cost: %d SEK for living area: %d kvm and distance cost: %d SEK", cleaningCost, *booking.CurrentResidence.LivingArea, cleaningDistanceCost)
 				estimatedPrice += cleaningCost + cleaningDistanceCost
 			} else {
-				// 30kr/kvm
-				cleaningCost := (*booking.CurrentResidence.LivingArea) * 30
+				// 50kr/kvm
+				cleaningCost := (*booking.CurrentResidence.LivingArea) * 50
 				estimatedPrice += cleaningCost
 				pc.logger.Infof("Add cleaning cost without distance cost: %d SEK for living area: %d kvm", cleaningCost, *booking.CurrentResidence.LivingArea)
 			}

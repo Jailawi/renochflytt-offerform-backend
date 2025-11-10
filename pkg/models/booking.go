@@ -11,6 +11,7 @@ type Booking struct {
 	Services         []string           `bson:"services" json:"services"`
 	MovingDate       Date               `bson:"moving_date" json:"moving_date"`
 	IsFlexibleDate   bool               `bson:"is_flexible_date" json:"is_flexible_date"`
+	EstimatedPrice   int                `bson:"estimated_price" json:"estimated_price"`
 	CleaningDate     *Date              `bson:"cleaning_date,omitempty" json:"cleaning_date,omitempty"`
 	CurrentResidence Residence          `bson:"current_address" json:"current_address"`
 	NewResidence     Residence          `bson:"new_address" json:"new_address"`

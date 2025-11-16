@@ -138,7 +138,7 @@
                                             <tr>
                                                 <td style="font-size: 24px; color: #333; font-weight: 700;">
                                                     {{if .EstimatedPrice}}
-                                                        {{.EstimatedPrice}} kr
+                                                        {{formatSEK .EstimatedPrice}} kr
                                                     {{else}}
                                                         Ej tillgängligt
                                                     {{end}}
@@ -194,7 +194,7 @@
                                                         <div style="color: #333; font-size: 16px; font-weight: 600; margin-bottom: 8px;">{{.CurrentResidence.Address}}</div>
                                                         <div style="color: #666; font-size: 14px; line-height: 1.6;">
                                                             <div>{{.CurrentResidence.ResidenceType}}</div>
-                                                            <div>{{.CurrentResidence.LivingArea}} m²</div>
+                                                            <div>{{.CurrentResidence.LivingArea}}&nbsp;m²</div>
                                                             {{if .CurrentResidence.Floor}}<div>Våning {{.CurrentResidence.Floor}}</div>{{end}}
                                                             <div>{{.CurrentResidence.Accessibility}}</div>
                                                         </div>

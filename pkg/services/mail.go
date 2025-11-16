@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"html/template"
 	"request-offer/pkg/models"
+	"request-offer/pkg/util"
 	"strings"
 	"time"
 
@@ -66,7 +67,10 @@ func (s *EmailService) SendTestEmail(to []string, booking *models.Booking) error
 	templatePath := "templates/company-booking.html"
 	companyEmail := s.envs.FromEmail
 	receivers := append(to, companyEmail)
-	tmpl, err := template.ParseFiles(templatePath)
+	tmpl := template.New("company-booking.html").Funcs(template.FuncMap{
+		"formatSEK": util.FormatSEK,
+	})
+	tmpl, err := tmpl.ParseFiles(templatePath)
 	if err != nil {
 		return fmt.Errorf("failed to load email template: %w", err)
 	}

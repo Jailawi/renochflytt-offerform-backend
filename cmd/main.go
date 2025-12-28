@@ -20,6 +20,7 @@ const (
 	HTTPPort      = "http-port"
 	Origins       = "origins"
 	MongoUri      = "mongo-uri"
+	Database      = "database"
 	FromEmail     = "from-email"
 	FromName      = "from-name"
 	APIKey        = "api-key"
@@ -56,6 +57,11 @@ func createApp() *cli.App {
 			Name:    MongoUri,
 			Usage:   "MongoDB URI",
 			EnvVars: []string{"MONGO_URI"},
+		},
+		&cli.StringFlag{
+			Name:    Database,
+			Usage:   "Database",
+			EnvVars: []string{"DATABASE"},
 		},
 		&cli.StringFlag{
 			Name:    FromEmail,
@@ -115,6 +121,7 @@ func start(c *cli.Context, log *logrus.Entry) {
 	envs := &models.Envs{
 		Origins:       c.String(Origins),
 		MongoUri:      c.String(MongoUri),
+		Database:      c.String(Database),
 		FromEmail:     c.String(FromEmail),
 		FromName:      c.String(FromName),
 		APIKey:        c.String(APIKey),

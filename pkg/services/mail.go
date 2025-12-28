@@ -50,7 +50,7 @@ func (s *EmailService) SendEmail(emailMsg *EmailMessage, bookingID primitive.Obj
 		return fmt.Errorf("failed to send email: %w", err)
 	}
 
-	s.mongoClient.Database("renochflytt").Collection("bookings").UpdateOne(
+	s.mongoClient.Database(s.envs.Database).Collection("bookings").UpdateOne(
 		context.Background(),
 		bson.M{"_id": bookingID},
 		bson.M{"$set": bson.M{"email_sent": true}},

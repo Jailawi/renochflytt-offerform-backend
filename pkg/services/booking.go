@@ -58,7 +58,7 @@ func (s *BookingService) CreateBooking(w http.ResponseWriter, r *http.Request) {
 	booking.CreatedAt = time.Now()
 	booking.EmailSent = false // Default to false, will be set to true after email is sent
 
-	result, err := s.mongoClient.Database("renochflytt").Collection("bookings").InsertOne(r.Context(), booking)
+	result, err := s.mongoClient.Database(s.envs.Database).Collection("bookings").InsertOne(r.Context(), booking)
 	if err != nil {
 		s.logger.Errorf("Error inserting booking into database: %v", err)
 		http.Error(w, "Failed to save booking", http.StatusInternalServerError)
@@ -69,7 +69,11 @@ func (s *BookingService) CreateBooking(w http.ResponseWriter, r *http.Request) {
 	s.logger.Infof("Received booking request: %+v", booking)
 
 	go s.emailSender.SendTestEmail([]string{booking.Contact.Email}, &booking) // Send email notification
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
+	if err = json.NewEncoder(w).Encode(map[string]string{"booking_id": booking.ID.Hex()}); err != nil {
+		s.logger.Errorf("Failed to write response: %v", err)
+	}
 }
 
 // Define the structure for the request body

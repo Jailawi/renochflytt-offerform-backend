@@ -8,14 +8,14 @@ import (
 )
 
 const (
-	PRICE_PACKNING                  = 1200 // SEK
-	PRICE_MONTERING                 = 300  // SEK
-	PRICE_PER_KM_OVER_THRESHOLD     = 8    // SEK
-	PRICE_PER_KM_UNDER_THRESHOLD    = 20   // SEK
-	PRICE_PER_KM_OVER_MAX_THRESHOLD = 23   // SEK
-	RADIUS                          = 6    // km
-	DISTANCE_THRESHOLD              = 60   // km
-	DISTANCE_THRESHOLD_MAX          = 1000 // km
+	PRICE_PACKNING                  = 35  // SEK/m2
+	PRICE_MONTERING                 = 300 // SEK
+	PRICE_PER_KM_UNDER_THRESHOLD    = 20  // SEK
+	PRICE_PER_KM_OVER_THRESHOLD     = 8   // SEK
+	PRICE_PER_KM_OVER_MAX_THRESHOLD = 5   // SEK
+	RADIUS                          = 6   // km
+	DISTANCE_THRESHOLD              = 60  // km
+	DISTANCE_THRESHOLD_MAX          = 500 // km
 )
 
 type PriceCalculator struct {
@@ -46,7 +46,7 @@ func (pc *PriceCalculator) CalculatePrice(booking *models.Booking, route *models
 			movingCost := pc.calculateMovingResidenceCost(*booking.CurrentResidence.LivingArea)
 			pc.logger.Infof("Add moving cost: %d SEK for living area: %d kvm", movingCost, *booking.CurrentResidence.LivingArea)
 			estimatedPrice += distanceCost + movingCost
-			if (booking.CurrentResidence.ResidenceType == "Lägenhet") {
+			if booking.CurrentResidence.ResidenceType == "Lägenhet" {
 				accessCost := pc.calculateAccessCost(booking.CurrentResidence.Accessibility, *booking.CurrentResidence.Floor)
 				pc.logger.Infof("Add cost: %d SEK for accessibility: %s, floor: %d", accessCost, booking.CurrentResidence.Accessibility, *booking.CurrentResidence.Floor)
 				estimatedPrice += accessCost
@@ -66,7 +66,7 @@ func (pc *PriceCalculator) CalculatePrice(booking *models.Booking, route *models
 			}
 			pc.logger.Infof("subtotal: %d SEK", estimatedPrice)
 		case "Packning":
-			estimatedPrice += PRICE_PACKNING
+			estimatedPrice += PRICE_PACKNING * (*booking.CurrentResidence.LivingArea)
 			pc.logger.Infof("Add packing cost: %d SEK", PRICE_PACKNING)
 		case "Montering":
 			estimatedPrice += PRICE_MONTERING
@@ -89,7 +89,7 @@ func (pc *PriceCalculator) calculateDistanceCost(distanceKm int) int {
 		return ((distanceKm - DISTANCE_THRESHOLD) * PRICE_PER_KM_OVER_THRESHOLD) + (DISTANCE_THRESHOLD * PRICE_PER_KM_UNDER_THRESHOLD)
 	}
 
-	return ((distanceKm - DISTANCE_THRESHOLD - DISTANCE_THRESHOLD_MAX) * PRICE_PER_KM_OVER_THRESHOLD) + (DISTANCE_THRESHOLD * PRICE_PER_KM_UNDER_THRESHOLD) + (PRICE_PER_KM_OVER_MAX_THRESHOLD * DISTANCE_THRESHOLD_MAX)
+	return ((distanceKm - DISTANCE_THRESHOLD_MAX) * PRICE_PER_KM_OVER_MAX_THRESHOLD) + ((DISTANCE_THRESHOLD_MAX - DISTANCE_THRESHOLD) * PRICE_PER_KM_OVER_THRESHOLD) + (DISTANCE_THRESHOLD * PRICE_PER_KM_UNDER_THRESHOLD)
 }
 
 func (pc *PriceCalculator) calculateMovingResidenceCost(livingArea int) int {

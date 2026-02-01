@@ -9,7 +9,7 @@ import (
 type Booking struct {
 	ID               primitive.ObjectID `bson:"_id," json:"id"`
 	Services         []string           `bson:"services" json:"services"`
-	MovingDate       Date               `bson:"moving_date" json:"moving_date"`
+	MovingDate       *Date              `bson:"moving_date,omitempty" json:"moving_date,omitempty"`
 	IsFlexibleDate   bool               `bson:"is_flexible_date" json:"is_flexible_date"`
 	EstimatedPrice   int                `bson:"estimated_price" json:"estimated_price"`
 	CleaningDate     *Date              `bson:"cleaning_date,omitempty" json:"cleaning_date,omitempty"`

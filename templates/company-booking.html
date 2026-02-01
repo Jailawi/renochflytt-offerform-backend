@@ -161,27 +161,55 @@
                                         <h3 style="margin: 0 0 20px 0; color: #E94A00; font-size: 18px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Datum</h3>
                                         <table width="100%" cellpadding="0" cellspacing="0" border="0">
                                             <tr>
+                                                {{if .MovingDate}}
                                                 <td width="33%" style="vertical-align: top; padding-right: 12px;" class="mobile-full-width mobile-hide-padding mobile-margin">
                                                     <div style="color: #666; font-size: 14px; font-weight: 500; margin-bottom: 4px;">Flyttdatum</div>
                                                     <div style="color: #333; font-size: 18px; font-weight: 600;">{{.MovingDate.Format "2006-01-02"}}</div>
                                                 </td>
-                                                <td width="33%" style="vertical-align: top; padding: 0 12px;" class="mobile-full-width mobile-hide-padding mobile-margin">
-                                                    <div style="color: #666; font-size: 14px; font-weight: 500; margin-bottom: 4px;">Flexibelt datum</div>
-                                                    <div style="color: #333; font-size: 16px;">{{if .IsFlexibleDate}}<span style="color: #27ae60;">✓ Ja</span>{{else}}Nej{{end}}</div>
-                                                </td>
+                                                {{end}}
                                                 {{if .CleaningDate}}
-                                                <td width="33%" style="vertical-align: top; padding-left: 12px;" class="mobile-full-width mobile-hide-padding">
+                                                <td width="33%" style="vertical-align: top; padding-right: 12px;" class="mobile-full-width mobile-hide-padding mobile-margin">
                                                     <div style="color: #666; font-size: 14px; font-weight: 500; margin-bottom: 4px;">Städdatum</div>
                                                     <div style="color: #333; font-size: 18px; font-weight: 600;">{{.CleaningDate.Format "2006-01-02"}}</div>
                                                 </td>
                                                 {{end}}
+                                                <td width="33%" style="vertical-align: top; padding: 0 12px;" class="mobile-full-width mobile-hide-padding mobile-margin">
+                                                    <div style="color: #666; font-size: 14px; font-weight: 500; margin-bottom: 4px;">Flexibelt datum</div>
+                                                    <div style="color: #333; font-size: 16px;">{{if .IsFlexibleDate}}<span style="color: #27ae60;">✓ Ja</span>{{else}}Nej{{end}}</div>
+                                                </td>
                                             </tr>
                                         </table>
                                     </td>
                                 </tr>
                             </table>
 
-                            <!-- Addresses Side by Side -->
+                            <!-- Addresses Section -->
+                            {{if and (eq (len .Services) 1) (eq (index .Services 0) "Flyttstädning")}}
+                            <!-- Only Current Address (Flyttstädning only) -->
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 24px;" class="mobile-margin">
+                                <tr>
+                                    <td style="vertical-align: top;">
+                                        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 8px; border: 1px solid #e0e0e0;">
+                                            <tr>
+                                                <td style="padding: 24px;" class="mobile-padding">
+                                                    <h3 style="margin: 0 0 20px 0; color: #E94A00; font-size: 18px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Adress</h3>
+                                                    <div style="margin-bottom: 16px;">
+                                                        <div style="color: #333; font-size: 16px; font-weight: 600; margin-bottom: 8px;">{{.CurrentResidence.Address}}</div>
+                                                        <div style="color: #666; font-size: 14px; line-height: 1.6;">
+                                                            <div>{{.CurrentResidence.ResidenceType}}</div>
+                                                            <div>{{.CurrentResidence.LivingArea}}&nbsp;m²</div>
+                                                            {{if .CurrentResidence.Floor}}<div>Våning {{.CurrentResidence.Floor}}</div>{{end}}
+                                                            <div>{{.CurrentResidence.Accessibility}}</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            {{else}}
+                            <!-- Addresses Side by Side (For other services) -->
                             <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 24px;" class="mobile-margin">
                                 <tr>
                                     <!-- Current Address -->
@@ -225,6 +253,7 @@
                                     </td>
                                 </tr>
                             </table>
+                            {{end}}
 
                             <!-- Next Steps Card -->
                             <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f8f9fa; border-radius: 8px; border-left: 4px solid #E94A00; border: 1px solid #e0e0e0;">

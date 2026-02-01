@@ -56,17 +56,17 @@ func createSampleBooking() *models.Booking {
 			"Packningshjälp",
 			"Möbelmontering",
 		},
-		MovingDate:     movingDate,
+		MovingDate:     &movingDate,
 		IsFlexibleDate: true,
 		CleaningDate:   &cleaningDate,
-		CurrentAddress: models.Address{
+		CurrentResidence: models.Residence{
 			Address:       "Storgatan 15, 11455 Stockholm",
 			ResidenceType: "Lägenhet",
 			LivingArea:    &livingArea,
 			Accessibility: "Hiss finns",
 			Floor:         &floor,
 		},
-		NewAddress: models.Address{
+		NewResidence: models.Residence{
 			Address:       "Vasagatan 22, 11120 Stockholm",
 			ResidenceType: "Lägenhet",
 			LivingArea:    &livingArea,

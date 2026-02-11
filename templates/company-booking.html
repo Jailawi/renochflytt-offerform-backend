@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bokningsbekräftelse - Ren & Flytt</title>
+    <style>
+        @media only screen and (max-width: 600px) {
+            .mobile-full-width {
+                width: 100% !important;
+                display: block !important;
+            }
+            .mobile-padding {
+                padding: 16px !important;
+            }
+            .mobile-margin {
+                margin-bottom: 16px !important;
+            }
+            .mobile-text-center {
+                text-align: center !important;
+            }
+            .mobile-hide-padding {
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+            }
+        }
+    </style>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; margin: 0; padding: 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+            <td align="center" style="padding: 0 10px;">
+                <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%;" class="mobile-full-width">
+                    
+                    <!-- Header with Logo in Top-Left -->
+                    <tr>
+                        <td bgcolor="#ffffff" style="padding: 20px;">
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    <td align="left" style="vertical-align: top;">
+                                        <!-- Logo positioned top-left like IKEA -->
+                                        <img src="https://www.renochflytt.se/wp-content/uploads/2024/02/output-onlinepngtools.png" alt="Ren & Flytt" width="150" height="auto" style="display: block;">
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Title Section -->
+                    <tr>
+                        <td bgcolor="#ffffffff" align="center" style="padding: 25px 20px;">
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    <td align="center" style="color: black;">
+                                        <h1 style="font-size: 28px; margin: 0 0 10px 0; color: black; font-weight: 600;">Bokningsbekräftelse</h1>
+                                        <h2 style="font-size: 20px; margin: 0 0 15px 0; color: black; font-weight: 500;">Välkommen till Ren & Flytt!</h2>
+                                        <p style="font-size: 16px; margin: 0; color: black; line-height: 1.5;">Tack för att du valde våra tjänster. Nedan följer dina bokningsuppgifter:</p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 30px 20px; color: #333; background-color: #f8f9fa;" class="mobile-padding">
+
+                            <!-- Contact Information Card -->
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 8px; margin-bottom: 24px; border: 1px solid #e0e0e0;" class="mobile-margin">
+                                <tr>
+                                    <td style="padding: 24px;" class="mobile-padding">
+                                        <h3 style="margin: 0 0 20px 0; color: #E94A00; font-size: 18px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Kontaktinformation</h3>
+                                        
+                                        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                            <tr>
+                                                <td width="50%" style="vertical-align: top; padding-right: 12px;" class="mobile-full-width mobile-hide-padding mobile-margin">
+                                                    <div style="margin-bottom: 16px;">
+                                                        <div style="color: #666; font-size: 14px; font-weight: 500; margin-bottom: 4px;">Namn</div>
+                                                        <div style="color: #333; font-size: 16px;">{{.Contact.Name}}</div>
+                                                    </div>
+                                                    <div style="margin-bottom: 16px;">
+                                                        <div style="color: #666; font-size: 14px; font-weight: 500; margin-bottom: 4px;">E-post</div>
+                                                        <div style="color: #333; font-size: 16px;">{{.Contact.Email}}</div>
+                                                    </div>
+                                                    <div style="margin-bottom: 16px;">
+                                                        <div style="color: #666; font-size: 14px; font-weight: 500; margin-bottom: 4px;">RUT-avdrag</div>
+                                                        <div style="color: #333; font-size: 16px;">{{if .Contact.Rutavdrag}}<span style="color: #27ae60;">✓ Ja</span>{{else}}Nej{{end}}</div>
+                                                    </div>
+                                                </td>
+                                                <td width="50%" style="vertical-align: top; padding-left: 12px;" class="mobile-full-width mobile-hide-padding">
+                                                    <div style="margin-bottom: 16px;">
+                                                        <div style="color: #666; font-size: 14px; font-weight: 500; margin-bottom: 4px;">Personnummer</div>
+                                                        <div style="color: #333; font-size: 16px;">{{.Contact.SSN}}</div>
+                                                    </div>
+                                                    <div style="margin-bottom: 16px;">
+                                                        <div style="color: #666; font-size: 14px; font-weight: 500; margin-bottom: 4px;">Telefon</div>
+                                                        <div style="color: #333; font-size: 16px;">{{.Contact.Phone}}</div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            {{if .Contact.Message}}
+                                            <tr>
+                                                <td colspan="2" style="padding-top: 12px;">
+                                                    <div style="color: #666; font-size: 14px; font-weight: 500; margin-bottom: 4px;">Meddelande</div>
+                                                    <div style="color: #333; font-size: 16px; background-color: #f8f9fa; padding: 12px; border-radius: 4px;">{{.Contact.Message}}</div>
+                                                </td>
+                                            </tr>
+                                            {{end}}
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Services Card -->
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 8px; margin-bottom: 24px; border: 1px solid #e0e0e0;" class="mobile-margin">
+                                <tr>
+                                    <td style="padding: 24px;" class="mobile-padding">
+                                        <h3 style="margin: 0 0 20px 0; color: #E94A00; font-size: 18px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Valda tjänster</h3>
+                                        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                            <tr>
+                                                <td>
+                                                    {{range .Services}}
+                                                    <span style="display: inline-block; background-color: #f8f9fa; padding: 8px 16px; border-radius: 20px; border: 1px solid #e9ecef; margin: 4px 8px 4px 0; color: #333; font-size: 14px; font-weight: 500;">✓ {{.}}</span>
+                                                    {{end}}
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Estimated Price Card -->
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 8px; margin-bottom: 24px; border: 1px solid #e0e0e0;" class="mobile-margin">
+                                <tr>
+                                    <td style="padding: 24px;" class="mobile-padding">
+                                        <h3 style="margin: 0 0 20px 0; color: #E94A00; font-size: 18px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Uppskattat pris</h3>
+                                        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                            <tr>
+                                                <td style="font-size: 24px; color: #333; font-weight: 700;">
+                                                    {{if .EstimatedPrice}}
+                                                        {{formatSEK .EstimatedPrice}} kr
+                                                    {{else}}
+                                                        Ej tillgängligt
+                                                    {{end}}
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="font-size: 14px; color: #666; padding-top: 8px;">
+                                                    Detta är ett preliminärt pris baserat på din bokning. Slutgiltigt pris kan variera beroende på faktiska förhållanden och skickas i offerten.
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Dates Card -->
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 8px; margin-bottom: 24px; border: 1px solid #e0e0e0;" class="mobile-margin">
+                                <tr>
+                                    <td style="padding: 24px;" class="mobile-padding">
+                                        <h3 style="margin: 0 0 20px 0; color: #E94A00; font-size: 18px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Datum</h3>
+                                        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                            <tr>
+                                                {{if .MovingDate}}
+                                                <td width="33%" style="vertical-align: top; padding-right: 12px;" class="mobile-full-width mobile-hide-padding mobile-margin">
+                                                    <div style="color: #666; font-size: 14px; font-weight: 500; margin-bottom: 4px;">Flyttdatum</div>
+                                                    <div style="color: #333; font-size: 18px; font-weight: 600;">{{.MovingDate.Format "2006-01-02"}}</div>
+                                                </td>
+                                                {{end}}
+                                                {{if .CleaningDate}}
+                                                <td width="33%" style="vertical-align: top; padding-right: 12px;" class="mobile-full-width mobile-hide-padding mobile-margin">
+                                                    <div style="color: #666; font-size: 14px; font-weight: 500; margin-bottom: 4px;">Städdatum</div>
+                                                    <div style="color: #333; font-size: 18px; font-weight: 600;">{{.CleaningDate.Format "2006-01-02"}}</div>
+                                                </td>
+                                                {{end}}
+                                                <td width="33%" style="vertical-align: top; padding: 0 12px;" class="mobile-full-width mobile-hide-padding mobile-margin">
+                                                    <div style="color: #666; font-size: 14px; font-weight: 500; margin-bottom: 4px;">Flexibelt datum</div>
+                                                    <div style="color: #333; font-size: 16px;">{{if .IsFlexibleDate}}<span style="color: #27ae60;">✓ Ja</span>{{else}}Nej{{end}}</div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Addresses Section -->
+                            {{if and (eq (len .Services) 1) (eq (index .Services 0) "Flyttstädning")}}
+                            <!-- Only Current Address (Flyttstädning only) -->
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 24px;" class="mobile-margin">
+                                <tr>
+                                    <td style="vertical-align: top;">
+                                        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 8px; border: 1px solid #e0e0e0;">
+                                            <tr>
+                                                <td style="padding: 24px;" class="mobile-padding">
+                                                    <h3 style="margin: 0 0 20px 0; color: #E94A00; font-size: 18px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Adress</h3>
+                                                    <div style="margin-bottom: 16px;">
+                                                        <div style="color: #333; font-size: 16px; font-weight: 600; margin-bottom: 8px;">{{.CurrentResidence.Address}}</div>
+                                                        <div style="color: #666; font-size: 14px; line-height: 1.6;">
+                                                            <div>{{.CurrentResidence.ResidenceType}}</div>
+                                                            <div>{{.CurrentResidence.LivingArea}}&nbsp;m²</div>
+                                                            {{if .CurrentResidence.Floor}}<div>Våning {{.CurrentResidence.Floor}}</div>{{end}}
+                                                            <div>{{.CurrentResidence.Accessibility}}</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            {{else}}
+                            <!-- Addresses Side by Side (For other services) -->
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 24px;" class="mobile-margin">
+                                <tr>
+                                    <!-- Current Address -->
+                                    <td width="48%" style="vertical-align: top;" class="mobile-full-width mobile-margin">
+                                        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 8px; border: 1px solid #e0e0e0;">
+                                            <tr>
+                                                <td style="padding: 24px;" class="mobile-padding">
+                                                    <h3 style="margin: 0 0 20px 0; color: #E94A00; font-size: 18px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Från</h3>
+                                                    <div style="margin-bottom: 16px;">
+                                                        <div style="color: #333; font-size: 16px; font-weight: 600; margin-bottom: 8px;">{{.CurrentResidence.Address}}</div>
+                                                        <div style="color: #666; font-size: 14px; line-height: 1.6;">
+                                                            <div>{{.CurrentResidence.ResidenceType}}</div>
+                                                            <div>{{.CurrentResidence.LivingArea}}&nbsp;m²</div>
+                                                            {{if .CurrentResidence.Floor}}<div>Våning {{.CurrentResidence.Floor}}</div>{{end}}
+                                                            <div>{{.CurrentResidence.Accessibility}}</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                    <td width="4%" class="mobile-full-width" style="height: 1px; line-height: 1px; font-size: 1px;">&nbsp;</td>
+                                    <!-- New Address -->
+                                    <td width="48%" style="vertical-align: top;" class="mobile-full-width">
+                                        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 8px; border: 1px solid #e0e0e0;">
+                                            <tr>
+                                                <td style="padding: 24px;" class="mobile-padding">
+                                                    <h3 style="margin: 0 0 20px 0; color: #E94A00; font-size: 18px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Till</h3>
+                                                    <div style="margin-bottom: 16px;">
+                                                        <div style="color: #333; font-size: 16px; font-weight: 600; margin-bottom: 8px;">{{.NewResidence.Address}}</div>
+                                                        <div style="color: #666; font-size: 14px; line-height: 1.6;">
+                                                            <div>{{.NewResidence.ResidenceType}}</div>
+                                                            {{if .NewResidence.LivingArea}}<div>{{.NewResidence.LivingArea}} m²</div>{{end}}
+                                                            {{if .NewResidence.Floor}}<div>Våning {{.NewResidence.Floor}}</div>{{end}}
+                                                            <div>{{.NewResidence.Accessibility}}</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                            {{end}}
+
+                            <!-- Next Steps Card -->
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f8f9fa; border-radius: 8px; border-left: 4px solid #E94A00; border: 1px solid #e0e0e0;">
+                                <tr>
+                                    <td style="padding: 24px;" class="mobile-padding">
+                                        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                            <tr>
+                                                <td width="40" style="vertical-align: top;" class="mobile-text-center">
+                                                    <span style="font-size: 24px;">🎯</span>
+                                                </td>
+                                                <td style="vertical-align: top;">
+                                                    <h3 style="margin: 0 0 12px 0; color: #E94A00; font-size: 18px; font-weight: 600;">Vad händer härnäst?</h3>
+                                                    <p style="margin: 0; color: #333; font-size: 16px; line-height: 1.6;">Vi kommer att granska din bokningsförfrågan och kontakta dig inom 24 timmar för att bekräfta uppgifterna och ge en offert.</p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td bgcolor="#FFFFFF" align="center" style="padding: 30px 20px;">
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                <tr>
+                                    <td align="center" style="color: black;">
+                                        <h3 style="font-size: 20px; margin: 0 0 20px 0; color: black;">Har du frågor? Vi finns här för dig!</h3>
+
+                                        <p style="font-size: 16px; margin: 10px 0; color: black;">
+                                            📧 E-post: <a href="mailto:info@renochflytt.se" style="color: #E94A00;">info@renochflytt.se</a>
+                                        </p>
+                                        <p style="font-size: 16px; margin: 10px 0; color: black;">
+                                            🌐 Webbplats: <a href="https://renochflytt.se" style="color: #E94A00;">www.renochflytt.se</a>
+                                        </p>
+
+                                        <hr style="border: none; height: 1px; background-color: #DDDDDD; margin: 25px 0;">
+                                        <p style="font-style: italic; color: #bdc3c7; font-size: 14px; margin: 0;">
+                                            Tack för att du väljer Ren & Flytt - Vi gör flytten enkel för dig!
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

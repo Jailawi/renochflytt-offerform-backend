@@ -1,34 +1,41 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type Booking struct {
-	Services       []string  `bson:"services" json:"services"`
-	MovingDate     Date      `bson:"moving_date" json:"moving_date"`
-	FlexibleDate   bool      `bson:"flexible_date" json:"flexible_date"`
-	CleaningDate   Date      `bson:"cleaning_date" json:"cleaning_date"`
-	CurrentAddress Address   `bson:"current_address" json:"current_address"`
-	NewAddress     Address   `bson:"new_address" json:"new_address"`
-	Contact        Contact   `bson:"contact" json:"contact"`
-	CreatedAt      time.Time `bson:"created_at" json:"-"`
+	ID               primitive.ObjectID `bson:"_id," json:"id"`
+	Services         []string           `bson:"services" json:"services"`
+	MovingDate       *Date              `bson:"moving_date,omitempty" json:"moving_date,omitempty"`
+	IsFlexibleDate   bool               `bson:"is_flexible_date" json:"is_flexible_date"`
+	EstimatedPrice   int                `bson:"estimated_price" json:"estimated_price"`
+	CleaningDate     *Date              `bson:"cleaning_date,omitempty" json:"cleaning_date,omitempty"`
+	CurrentResidence Residence          `bson:"current_address" json:"current_address"`
+	NewResidence     Residence          `bson:"new_address" json:"new_address"`
+	Contact          Contact            `bson:"contact" json:"contact"`
+	EmailSent        bool               `bson:"email_sent" json:"email_sent"`
+	CreatedAt        time.Time          `bson:"created_at" json:"-"`
 }
 
-type Address struct {
+type Residence struct {
 	Address       string `bson:"address" json:"address"`
 	ResidenceType string `bson:"residence_type" json:"residence_type"`
-	LivingSpace   int    `bson:"living_space" json:"living_space"`
+	LivingArea    *int   `bson:"living_area,omitempty" json:"living_area,omitempty"`
 	Accessibility string `bson:"accessibility" json:"accessibility"`
-	Floor         int    `bson:"floor" json:"floor"`
+	Floor         *int   `bson:"floor,omitempty" json:"floor,omitempty"`
 }
 
 type Contact struct {
-	Name      string `bson:"name" json:"name"`
-	SSN       string `bson:"ssn" json:"ssn"`
-	Email     string `bson:"email" json:"email"`
-	Phone     string `bson:"phone" json:"phone"`
-	Rutavdrag bool   `bson:"rutavdrag" json:"rutavdrag"`
-	Message   string `bson:"message" json:"message"`
-	Policy    bool   `bson:"terms_and_conditions" json:"terms_and_conditions"`
+	Name      string  `bson:"name" json:"name"`
+	SSN       string  `bson:"ssn" json:"ssn"`
+	Email     string  `bson:"email" json:"email"`
+	Phone     string  `bson:"phone" json:"phone"`
+	Rutavdrag bool    `bson:"rutavdrag" json:"rutavdrag"`
+	Message   *string `bson:"message" json:"message"`
+	Consent   bool    `bson:"consent" json:"consent"`
 }
 
 type Date struct {

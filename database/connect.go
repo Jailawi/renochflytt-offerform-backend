@@ -2,7 +2,6 @@ package database
 
 import (
 	"context"
-	"os"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -12,12 +11,11 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func ConnectToMongoDB(log *logrus.Entry) (*mongo.Client, error) {
+func ConnectToMongoDB(uri string, log *logrus.Entry) (*mongo.Client, error) {
 	log.Infof("Connecting to MongoDB...")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	uri := os.Getenv("MONGODB_URI")
 	clientOptions := options.Client().ApplyURI(uri)
 	client, err := mongo.Connect(ctx, clientOptions)
 	if err != nil {

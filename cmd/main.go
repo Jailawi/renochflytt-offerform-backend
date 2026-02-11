@@ -5,14 +5,27 @@ import (
 	"os"
 	"os/signal"
 	"request-offer/database"
+	"request-offer/pkg/middleware"
+	"request-offer/pkg/models"
 	"request-offer/pkg/server"
 	"request-offer/pkg/services"
 	"syscall"
 
-	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 
 	"github.com/urfave/cli/v2"
+)
+
+const (
+	HTTPPort      = "http-port"
+	Origins       = "origins"
+	MongoUri      = "mongo-uri"
+	Database      = "database"
+	FromEmail     = "from-email"
+	FromName      = "from-name"
+	APIKey        = "api-key"
+	MapsAPIKey    = "maps-api-key"
+	MailgunAPIKey = "mailgun-api-key"
 )
 
 func main() {
@@ -28,38 +41,54 @@ func createApp() *cli.App {
 	app.Name = "Booking App"
 	app.Usage = "A booking app for moving services"
 	app.Flags = []cli.Flag{
-		&cli.StringFlag{
-			Name:  "host",
-			Usage: "Database host",
-			Value: "localhost",
-		},
 		&cli.Int64Flag{
-			Name:  "HTTPport",
-			Usage: "http port",
-			Value: 8080,
-		},
-		&cli.Int64Flag{
-			Name:  "DBport",
-			Usage: "Database host",
-			Value: 5432,
+			Name:    HTTPPort,
+			Usage:   "HTTP port",
+			Value:   8080,
+			EnvVars: []string{"PORT"},
 		},
 		&cli.StringFlag{
-			Name:    "user",
-			Usage:   "Database user",
-			EnvVars: []string{"DB_USER"},
-			Value:   "postgres",
+			Name:    Origins,
+			Usage:   "Allowed origins",
+			Value:   "*",
+			EnvVars: []string{"ORIGINS"},
 		},
 		&cli.StringFlag{
-			Name:    "db-name",
-			Usage:   "Database name",
-			EnvVars: []string{"DB_NAME"},
-			Value:   "renochflytt",
+			Name:    MongoUri,
+			Usage:   "MongoDB URI",
+			EnvVars: []string{"MONGO_URI"},
 		},
 		&cli.StringFlag{
-			Name:    "db-password",
-			Usage:   "Database password",
-			Value:   "admin",
-			EnvVars: []string{"DB_PASSWORD"},
+			Name:    Database,
+			Usage:   "Database",
+			EnvVars: []string{"DATABASE"},
+		},
+		&cli.StringFlag{
+			Name:    FromEmail,
+			Usage:   "From email address",
+			Value:   "info@renochflytt.se",
+			EnvVars: []string{"FROM_EMAIL"},
+		},
+		&cli.StringFlag{
+			Name:    FromName,
+			Usage:   "From name",
+			Value:   "Ren & Flytt",
+			EnvVars: []string{"FROM_NAME"},
+		},
+		&cli.StringFlag{
+			Name:    APIKey,
+			Usage:   "API key",
+			EnvVars: []string{"X-API-KEY"},
+		},
+		&cli.StringFlag{
+			Name:    MapsAPIKey,
+			Usage:   "Maps API key",
+			EnvVars: []string{"MAPS_API_KEY"},
+		},
+		&cli.StringFlag{
+			Name:    MailgunAPIKey,
+			Usage:   "Mailgun API key",
+			EnvVars: []string{"MAILGUN_API_KEY"},
 		},
 	}
 
@@ -88,22 +117,33 @@ func createTerminationHandler(log *logrus.Entry) chan bool {
 
 func start(c *cli.Context, log *logrus.Entry) {
 	log.Infof("Starting application...")
-	err := godotenv.Load("../.env")
-	if err != nil {
-		log.Warnf("Error loading .env file: %v", err)
+
+	envs := &models.Envs{
+		Origins:       c.String(Origins),
+		MongoUri:      c.String(MongoUri),
+		Database:      c.String(Database),
+		FromEmail:     c.String(FromEmail),
+		FromName:      c.String(FromName),
+		APIKey:        c.String(APIKey),
+		MapsAPIKey:    c.String(MapsAPIKey),
+		MailgunAPIKey: c.String(MailgunAPIKey),
 	}
 
 	// Initialize database connection
-	db, err := database.ConnectToMongoDB(log)
+	db, err := database.ConnectToMongoDB(envs.MongoUri, log)
 	if err != nil {
 		log.Fatalf("Failed to connect to MongoDB: %v", err)
 	}
 
-	emailService := services.NewEmailService(log)
+	emailService := services.NewEmailService(db, envs, log)
+	routeService := services.NewDistanceService(envs, log)
+	priceCalculator := services.NewPriceCalculator(log)
+	bookingService := services.NewBookingService(db, emailService, routeService, priceCalculator,log, envs)
 
-	bookingService := services.NewBookingService(db, emailService, log)
+	// Start cleanup of inactive limiters
+	middleware.CleanupInactiveLimiters()
 
 	// Start the server
-	server.Start(c, log, bookingService)
+	server.Start(c, log, envs, bookingService)
 	log.Infof("Application started successfully")
 }

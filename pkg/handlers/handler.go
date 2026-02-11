@@ -20,16 +20,24 @@ func NewHandler(bookingService *services.BookingService, logger *logrus.Entry) *
 }
 
 func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
-	mux.HandleFunc("/", h.homeHandler)
-	// mux.HandleFunc("/offer-estimate", h.calc.EstimateHandler)
-	mux.HandleFunc("/booking", h.bookingHandler)
+	mux.HandleFunc("GET /", h.homeHandler)
+	mux.HandleFunc("POST /offer-estimate", h.estimateHandler)
+	mux.HandleFunc("POST /booking", h.bookingHandler)
 }
 
 func (h *Handler) homeHandler(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path != "/" {
+        http.NotFound(w, r)
+        return
+    }
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Welcome to the Ren och Flytt API!"))
 }
 
 func (h *Handler) bookingHandler(w http.ResponseWriter, r *http.Request) {
 	h.bookingService.CreateBooking(w, r)
+}
+
+func (h *Handler) estimateHandler(w http.ResponseWriter, r *http.Request) {
+	h.bookingService.EstimateBooking(w, r)
 }

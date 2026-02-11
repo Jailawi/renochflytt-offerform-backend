@@ -1,13 +1,21 @@
 package services
 
 import (
+	"bytes"
+	"context"
 	"fmt"
-	"net/smtp"
-	"os"
+	"html/template"
+	"request-offer/pkg/models"
+	"request-offer/pkg/util"
 	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+
+	"github.com/mailgun/mailgun-go/v4"
 )
 
 type EmailMessage struct {
@@ -18,112 +26,89 @@ type EmailMessage struct {
 
 // EmailService handles email operations
 type EmailService struct {
-	config *EmailConfig
-	logger *logrus.Entry
-}
-
-type EmailConfig struct {
-	SMTPHost     string
-	SMTPPort     string
-	SMTPPassword string
-	FromEmail    string
-	FromName     string
+	envs        *models.Envs
+	logger      *logrus.Entry
+	mongoClient *mongo.Client
 }
 
 // NewEmailService creates a new email service
-func NewEmailService(logger *logrus.Entry) *EmailService {
-	emailConfig, err := LoadEmailConfig()
-	if err != nil {
-		panic(fmt.Sprintf("Failed to load email configuration: %v", err))
-	}
+func NewEmailService(mongoClient *mongo.Client, envs *models.Envs, logger *logrus.Entry) *EmailService {
 	return &EmailService{
-		config: emailConfig,
-		logger: logger,
+		envs:        envs,
+		logger:      logger,
+		mongoClient: mongoClient,
 	}
-}
-
-// LoadEmailConfig loads email configuration from environment variables
-func LoadEmailConfig() (*EmailConfig, error) {
-
-	config := &EmailConfig{
-		SMTPHost:     os.Getenv("SMTP_HOST"),
-		SMTPPort:     os.Getenv("SMTP_PORT"),
-		SMTPPassword: os.Getenv("SMTP_PASSWORD"),
-		FromEmail:    os.Getenv("FROM_EMAIL"),
-		FromName:     os.Getenv("FROM_NAME"),
-	}
-
-	// Validate required fields
-	if config.SMTPHost == "" || config.SMTPPassword == "" || config.FromEmail == "" {
-		return nil, fmt.Errorf("missing required email configuration")
-	}
-
-	return config, nil
 }
 
 // SendEmail sends an email using the EmailService
-func (s *EmailService) SendEmail(emailMsg *EmailMessage) error {
-	s.logger.Infof("Sending email from: %s to: %v", s.config.FromEmail, emailMsg.To)
+func (s *EmailService) SendEmail(emailMsg *EmailMessage, bookingID primitive.ObjectID) error {
+	s.logger.Infof("Sending email from: %s to: %v", s.envs.FromEmail, emailMsg.To)
 
 	// Build the complete email message
-	msg := s.buildEmailMessage(emailMsg)
-
-	// Setup authentication
-	auth := smtp.PlainAuth("", s.config.FromEmail, s.config.SMTPPassword, s.config.SMTPHost)
-
-	// Send email via SMTP
-	serverAddr := fmt.Sprintf("%s:%s", s.config.SMTPHost, s.config.SMTPPort)
-	if err := smtp.SendMail(serverAddr, auth, s.config.FromEmail, emailMsg.To, msg); err != nil {
+	_, err := s.SendWithMailGun("renochflytt.se", emailMsg) // --- IGNORE ---
+	if err != nil {
 		return fmt.Errorf("failed to send email: %w", err)
 	}
+
+	s.mongoClient.Database(s.envs.Database).Collection("bookings").UpdateOne(
+		context.Background(),
+		bson.M{"_id": bookingID},
+		bson.M{"$set": bson.M{"email_sent": true}},
+	)
 
 	s.logger.Infof("Email sent successfully!")
 	return nil
 }
 
-// buildEmailMessage creates a properly formatted email message
-func (s *EmailService) buildEmailMessage(emailMsg *EmailMessage) []byte {
-	var builder strings.Builder
-
-	// Generate unique message ID and timestamp
-	messageID := fmt.Sprintf("<%d.%s@%s>", time.Now().UnixNano(), "gomail", "renochflytt.se")
-	date := time.Now().Format("Mon, 02 Jan 2006 15:04:05 -0700")
-
-	// Write headers consistently using fmt.Fprintf
-	fmt.Fprintf(&builder, "Message-ID: %s\r\n", messageID)
-	fmt.Fprintf(&builder, "Date: %s\r\n", date)
-	fmt.Fprintf(&builder, "From: \"%s\" <%s>\r\n", s.config.FromName, s.config.FromEmail)
-	fmt.Fprintf(&builder, "To: %s\r\n", emailMsg.To[0])
-	fmt.Fprintf(&builder, "Subject: %s\r\n", emailMsg.Subject)
-	fmt.Fprintf(&builder, "MIME-Version: 1.0\r\n")
-	fmt.Fprintf(&builder, "Content-Type: text/html; charset=UTF-8\r\n")
-	fmt.Fprintf(&builder, "X-Mailer: Ren-Flytt-System\r\n")
-	fmt.Fprintf(&builder, "\r\n") // Empty line separates headers from body
-	builder.WriteString(emailMsg.Body)
-
-	return []byte(builder.String())
-}
-
 // SendTestEmail sends a test email - convenience function for testing
-func (s *EmailService) SendTestEmail(to []string) error {
-	emailMsg := &EmailMessage{
-		To:      to,
-		Subject: "Important: Message from Ren & Flytt",
-		Body: `
-        <html>
-        <body>
-            <h1>Welcome to Ren & Flytt!</h1>
-            <p>This is an <strong>HTML</strong> email with:</p>
-            <ul>
-                <li>Bold text</li>
-                <li>Lists</li>
-                <li><a href="https://renochflytt.se">Links</a></li>
-            </ul>
-            <p style="color: blue;">Styled text</p>
-        </body>
-        </html>
-    `,
+func (s *EmailService) SendTestEmail(to []string, booking *models.Booking) error {
+	s.logger.Infof("Loading email template and sending test email to: %v", to)
+	// Load template from file
+	templatePath := "templates/company-booking.html"
+	companyEmail := s.envs.FromEmail
+	receivers := append(to, companyEmail)
+	tmpl := template.New("company-booking.html").Funcs(template.FuncMap{
+		"formatSEK": util.FormatSEK,
+	})
+	tmpl, err := tmpl.ParseFiles(templatePath)
+	if err != nil {
+		return fmt.Errorf("failed to load email template: %w", err)
 	}
 
-	return s.SendEmail(emailMsg)
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, booking)
+	if err != nil {
+		s.logger.Errorf("Error executing template: %v", err)
+		return fmt.Errorf("failed to execute email template: %w", err)
+	}
+
+	emailMsg := &EmailMessage{
+		To:      receivers,
+		Subject: "Bokningsbekräftelse - Ren & Flytt",
+		Body:    buf.String(),
+	}
+
+	return s.SendEmail(emailMsg, booking.ID)
+}
+
+func (s *EmailService) SendWithMailGun(domain string, emailMsg *EmailMessage) (string, error) {
+	s.logger.Infof("Sending email with MailGun to: %v", emailMsg.To)
+	mg := mailgun.NewMailgun(domain, s.envs.MailgunAPIKey)
+	//When you have an EU-domain, you must specify the endpoint:
+	mg.SetAPIBase("https://api.eu.mailgun.net/v3")
+	msg := mailgun.NewMessage(
+		fmt.Sprintf("Ren & Flytt <%s>", s.envs.FromEmail),
+		emailMsg.Subject,
+		"",
+		strings.Join(emailMsg.To, ", "),
+	)
+
+	msg.SetHTML(emailMsg.Body)
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	defer cancel()
+
+	_, id, err := mg.Send(ctx, msg)
+	s.logger.Infof("Sent email with MailGun to: %v", emailMsg.To)
+	return id, err
 }
